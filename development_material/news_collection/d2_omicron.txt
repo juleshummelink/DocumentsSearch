@@ -1,0 +1,48 @@
+What Are the Symptoms of Omicron?
+While there are subtle differences between the latest coronavirus strain and previous ones, so far the signs of infection look pretty similar.
+
+With cases of Omicron rising throughout the United States, before and after the holidays, Americans are scrambling to distinguish the symptoms of this new variant from those of other coronavirus variants, including Delta.
+
+Most P.C.R. and rapid antigen tests can detect Omicron — the Food and Drug Administration has noted there are only a few tests that don’t — but results do not indicate to the user which variant they are infected with, leaving people to guess.
+
+Can Omicron symptoms be distinguished from Delta symptoms?
+Some symptom differences have emerged from preliminary data, but experts are not certain they are meaningful. Data released in December from South Africa’s largest private health insurer, for instance, suggest that South Africans with Omicron often develop a scratchy or sore throat along with nasal congestion, a dry cough and muscle pain, especially low back pain.
+
+But these are all symptoms of Delta and of the original coronavirus, too, said Ashley Z. Ritter, an adjunct professor at the University of Pennsylvania and the chief executive of Dear Pandemic. Given that Omicron has been circulating for only a matter of weeks, she added, “it’s still too early to say that there’s any difference in symptoms between the Omicron variant and previous versions.”
+
+It’s likely that the symptoms of Omicron will resemble Delta’s more than they differ.
+
+“There’s probably a huge amount of overlap between Omicron and the prior variants, because they are essentially doing the same thing,” said Dr. Otto O. Yang, an infectious disease physician at the University of California, Los Angeles, David Geffen School of Medicine. “If there are differences, they’re probably fairly subtle.”
+
+One possible difference is that Omicron may be less likely than earlier variants to cause a loss of taste and smell. Research suggests that 48 percent of patients with the original SARS-CoV-2 strain reported loss of smell and 41 percent reported loss of taste, but an analysis of a small Omicron outbreak among vaccinated people in Norway found that only 23 percent of patients reported loss of taste, and only 12 percent reported loss of smell. It’s unclear, though, whether these differences are because of Omicron or some other factor, like vaccination status.
+
+Does Omicron cause more gastrointestinal symptoms or fatigue than other variants?
+Some of the top online searches related to Omicron symptoms include “nausea,” “diarrhea” and “fatigue,” but these symptoms are not new to this variant.
+
+Nausea has always been a common Covid symptom, including with the Omicron variant, said Dr. Jennifer Lighter, an epidemiologist and pediatric infectious diseases specialist at N.Y.U. Langone. The Centers for Disease Control and Prevention lists nausea and vomiting as prevalent symptoms of the virus.
+
+People with Omicron may report symptoms like nausea more often because loss of smell is less prevalent with the new variant, said Andrew Pekosz, a professor of molecular microbiology and immunology at the Johns Hopkins Bloomberg School of Public Health. They are paying more attention to milder symptoms like nausea and dizziness, because they are not focused on a sudden loss of smell, he added.
+
+
+Gastrointestinal symptoms occur more often in children than in adults, Dr. Lighter said, but they can happen in adults too. The virus can infect some cells in a patient’s gastrointestinal tract, which would lead to stomach issues like diarrhea, Dr. Pekosz said. Respiratory infections in general may cause people to produce more phlegm as they cough; swallowing that phlegm can then also irritate and upset the stomach.
+
+Fatigue is one of the more common Covid symptoms, both with Omicron and with previous variants of the virus, Dr. Lighter said. However, usually if someone is experiencing symptomatic Covid, fatigue will not be the only symptom.
+
+To distinguish Covid-related fatigue from general weariness or exhaustion, pay attention to whether it comes on more suddenly, Dr. Pekosz said. “We get run down during the day,” he said, “but if it increases really quickly, that’s a sign that it isn’t just, ‘I didn’t have my coffee this morning.’”
+
+Are Omicron symptoms different if you are vaccinated?
+Indeed, many Covid-19 symptoms vary depending on a person’s vaccine status. Maya N. Clark-Cutaia, an assistant professor at the New York University Meyers College of Nursing who has been following up with Covid-19 patients throughout the pandemic, said that vaccinated patients with Delta or the original coronavirus tend to present with headache, congestion, sinus pressure and sinus pain, while unvaccinated patients are more likely to have shortness of breath and cough, along with flulike symptoms.
+
+With Omicron, Dr. Clark-Cutaia said patients she’s talked to in Pennsylvania are presenting with similar symptoms to Delta. Vaccinated Omicron patients complain of headaches, body aches and fever — “like a really bad cold,” she said. Unvaccinated people have the same shortness of breath, cough and flulike symptoms she saw among unvaccinated people with Delta and the original coronavirus.
+
+How long does it take for symptoms to appear?
+Omicron seems to have a shorter incubation time than other variants — after a person is exposed, it takes as few as three days for them to develop symptoms, become contagious and test positive compared with four to six days with Delta and the original coronavirus, said Dr. Waleed Javaid, the director of infection prevention and control at Mount Sinai Downtown in New York City. That could be because the variant’s mutations help it attach to and go inside cells, he added.
+
+Is Omicron milder than other variants?
+Some encouraging, emerging research shows that Omicron may cause less damage to the lungs, resulting in less severe disease than previous iterations of the virus. Early evidence from Europe also suggests Omicron may cause milder symptoms. In December, three separate research teams concluded that the variant was less likely to send patients to hospitals.
+
+According to data from South Africa, after controlling for vaccination status, the risk of hospitalization for adults diagnosed with Omicron was 29 percent lower there than in the first wave of the pandemic, and hospitalized South African Covid-19 patients have been less likely to be admitted to intensive care.
+
+But South Africa’s observations may not apply to the United States and other countries. Most South Africans have already been infected with Covid-19, and the median age in South Africa is 27 — both of which might cause the variant to have milder effects there than in the U.S., where the median age is 38, Dr. Yang said. The data also showed that, although children tended to have mild symptoms, they were 20 percent more likely to be hospitalized during the Omicron wave compared with the first wave.
+
+“There are people who get severe illness from Omicron,” Dr. Javaid said. Sometimes, early mild symptoms can develop into serious symptoms later, so it’s crucial that people with cold or flulike symptoms be tested and stay home. “It is still a coronavirus. We’re still in a pandemic,” he said.

@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PaperFind</title>
+    <link rel="stylesheet" href="static/css/main.css">
+    <link rel="stylesheet" href="static/css/results.css">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons"
+      rel="stylesheet">
+</head>
+<body>
+    <div class="header">
+        <h1>PaperFind</h1>
+        <h3>Upload, paste or choose a document below</h3>
+    </div>
+    <div class="search">
+        <div class="searchTypes">
+            <div class="upload">
+                <div class="placeHolder">
+                    <span class="material-icons fileIcon">
+                        description
+                    </span>
+                    <span class="placeHolderText">Drag a file here</span>
+                    <span class="placeHolderSubText">or click to select a file</span>
+                </div>
+            </div>
+            <div class="paste">
+                <textarea class="pasteArea">Or paste text here...</textarea>
+            </div>
+        </div>
+        <div class="documentSelect">
+
+        </div>
+        <div class="buttons">
+            <div class="saveContainer">
+                <input type="checkbox" class="saveBox" checked="true" id="savePaper">
+                <label for="savePaper" class="saveLabel">Reccomend this paper to others</label>
+            </div>
+            <span class="searchButton">Search</span>
+        </div>
+    </div>
+    <div class="resultsContainer">
+        <img class="loading" src="/static/img/loading.svg" alt="loading">
+        <!-- <div class="result">
+            <div class="resultHeader">
+                <span class="resultTitle">Test document</span>
+                <span class="resultFormat">txt</span>
+                <span class="resultLabel">Simalarity:</span>
+                <span class="resultSimilarity">0.0137762348327</span>
+                <span class="resultScale">high</span>
+            </div>
+            <span class="resultPreview">
+                ... bowed their heads And grateful prayers were <b>prayed</b>. And the people in the streets ...
+            </span>
+        </div> -->
+    </div>
+</body>
+
+<script src="static/js/main.js"></script>
+
+</html>
