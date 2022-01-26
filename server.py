@@ -13,6 +13,7 @@ from flask import request
 from flask import render_template
 import json
 from random import randint
+from waitress import serve
 
 ALLOWED_EXTENSIONS = {'txt', 'pdf'}
 
@@ -32,9 +33,10 @@ try:
 except:
     pass
 
+
 # Simple logging function
 def printLog(*input, table=False):
-    if verbose and table == False:
+    if verbose and not table:
         print("\n", end="")
         for item in input:
             print(item, end=" ")
@@ -59,21 +61,22 @@ def importTfIdf(fileLocation):
                 try:
                     row.append(float(item))
                 except:
-                    #Item is not a float, leave as it
+                    # Item is not a float, leave as it
                     row.append(item)
             # For every line (term) extract the data per document
             table.append(row)
         return table
-            
     except:
         print("Could not open TfIdf table file...")
 
+
 # This function calculates the vector length per document id
 def calculateVectorLength(TfIdf, documentColumn):
-    squaredSum = 0;
-    for row in range(1,len(TfIdf)):
+    squaredSum = 0
+    for row in range(1, len(TfIdf)):
         squaredSum += TfIdf[row][documentColumn]**2
     return squaredSum**0.5
+
 
 # This function calculates the vector lengths for all documents
 def createVectorTable(TfIdf):
@@ -89,6 +92,7 @@ def createVectorTable(TfIdf):
     table.append(lengthRow)
     return table
 
+
 # This function returns the dotproduct of two documents
 def createDotProduct(TfIdf, document1, document2):
     dotProductSum = 0
@@ -96,11 +100,13 @@ def createDotProduct(TfIdf, document1, document2):
         dotProductSum += TfIdf[line][document1] * TfIdf[line][document2]
     return dotProductSum
 
+
 # This function returns the simalarity between a number of documents
 def compareDocuments(TfIdf, vectorLengthTable, document1, document2):
     dotProduct = createDotProduct(TfIdf, document1, document2)
     lengthProduct = vectorLengthTable[1][document1] * vectorLengthTable[1][document2]
     return dotProduct/lengthProduct
+
 
 # This function returns a query table
 def createQueryTable(TfIdf, VectorLengthTable, queryId):
@@ -113,6 +119,7 @@ def createQueryTable(TfIdf, VectorLengthTable, queryId):
     table.append(results)
     return table
 
+
 # This function returns the final output table with the ranked results
 def createRankedTable(queryTable, previewDict):
     rankedTable = []
@@ -123,7 +130,7 @@ def createRankedTable(queryTable, previewDict):
     for documentId in range(0, len(queryTable[0])-1):
         rotatedTable.append([queryTable[0][documentId], queryTable[1][documentId]])
     # Sort the table
-    rankedQueryTable = sorted(rotatedTable, key=lambda score : score[1].real, reverse=True)
+    rankedQueryTable = sorted(rotatedTable, key=lambda score: score[1].real, reverse=True)
     for rank in range(0, len(rankedQueryTable)):
         # Find the scale (LOW, MEDIUM, HIGH)
         scale = "medium"
@@ -134,6 +141,7 @@ def createRankedTable(queryTable, previewDict):
         rankedTable.append([rank+1, rankedQueryTable[rank][0], rankedQueryTable[rank][1], scale, previewDict[rankedQueryTable[rank][0]]])
 
     return rankedTable
+
 
 # This function returns the TfIdf table based on the locations of the files
 def createTfIdfFromFiles(locations):
@@ -159,19 +167,16 @@ def createTfIdfFromFiles(locations):
         # Convert to lower case
         mText = mText.lower()
         # Remove chars
-        # Because of indexing error at preview generation we will now first split up words and then remove chars
-        # mText = re.sub(r"[“”!\"#$%&()*+-./:;<=>?@[\]^_`{|}~\n'0-9]", r" ", mText)
+        mText = re.sub(r"[“”‘’—!\"#$%&()*+-./:;<=>?@[\]^_`{|}~\n'0-9]", r"", mText)
         # Loop through the words
         mWords = dict()
         for word in mText.split(" "):
             # Lemitate the word
             mWord = lemmatizer.lemmatize(word)
-            # Remove chars
-            mWord = re.sub(r"[“”!\"#$%&()*+-./:;<=>?@[\]^_`{|}~\n'0-9]", r" ", mWord)
             # Check if it is a stop word
-            if not mWord in stopwords.words("english") and not word == "":
-                #Check if the world already excists in dictionary
-                if not mWord in mWords:
+            if mWord not in stopwords.words("english") and not word == "":
+                # Check if the world already excists in dictionary
+                if mWord not in mWords:
                     mWords[mWord] = 1
                 else:
                     mWords[mWord] += 1
@@ -204,14 +209,14 @@ def createTfIdfFromFiles(locations):
         # Add the term row to the frequency table
         frequency.append(termRow)
     if verbose:
-        print("\nFrequency table:\n",tabulate(frequency, headers="firstrow"))
+        print("\nFrequency table:\n", tabulate(frequency, headers="firstrow"))
     N = len(fileDicts)
     # Loop through all terms again to create the idf table
     for term in mergedDict.keys():
         idf.append([term, df[term], N/df[term], log2(N/df[term])])
 
     if verbose:
-        print("\nIdf table:\n",tabulate(idf, headers="firstrow"))
+        print("\nIdf table:\n", tabulate(idf, headers="firstrow"))
     # Create output table by multiplying frequency table by idf
     for row in frequency[1:]:
         outputRow = [row[0]]
@@ -219,10 +224,10 @@ def createTfIdfFromFiles(locations):
             outputRow.append(freq*idf[frequency.index(row)][3])
         output.append(outputRow)
 
-
     if verbose:
-        print("\nOutput table:\n",tabulate(output, headers="firstrow"))
+        print("\nOutput table:\n", tabulate(output, headers="firstrow"))
     return output
+
 
 # This function finds the text around a word
 def textAroundWord(text, word, rangeAround=7):
@@ -246,6 +251,7 @@ def textAroundWord(text, word, rangeAround=7):
                 output += f"<b>{textArray[wordIndex]}</b> "
     output += "..."
     return output
+
 
 def createPreviewDict(fileLocations):
     previews = dict()
@@ -288,13 +294,15 @@ def createPreviewDict(fileLocations):
         try:
             mPreviewWord = list(mWords.intersection(queryWords))[0]
             previews[os.path.basename(mFile.name)] = textAroundWord(mText, mPreviewWord)
-            #previews[os.path.basename(mFile.name)] = ["..." + re.search(r"((\w+|\s+|[.?!]){0,8}" + re.escape(mPreviewWord) + r"(\s+|\w+|[.?!]){0,8})", re.sub(r"\n", r" ", mText), re.IGNORECASE).group() + " ...", mPreviewWord]
+            # previews[os.path.basename(mFile.name)] = ["..." + re.search(r"((\w+|\s+|[.?!]){0,8}" + re.escape(mPreviewWord) + r"(\s+|\w+|[.?!]){0,8})", re.sub(r"\n", r" ", mText), re.IGNORECASE).group() + " ...", mPreviewWord]
         except:
             previews[os.path.basename(mFile.name)] = f"No preview available :("
     return previews
 
+
 # Create flask app
 app = flask.Flask(__name__)
+
 
 # Landing page
 @app.route("/")
@@ -305,7 +313,8 @@ def main():
 # Search API
 def allowed_file(filename):
 	return '.' in filename and \
-		filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+        filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
 
 @app.route("/search", methods=["POST"])
 def search():
@@ -313,7 +322,7 @@ def search():
     # Retreive file
     mFile = request.files['file']
     if not allowed_file(mFile.filename):
-        return(json.dumps({'satus' : 400, 'error' : 'File not supported'}), 400)
+        return(json.dumps({'satus': 400, 'error': 'File not supported'}), 400)
     # Save file in tmp directory
     mFilename = str(randint(999999999, 9999999990)) + '.' + mFile.filename.split('.')[-1]
     printLog("File uploaded, save in temp folder as", mFilename)
@@ -325,7 +334,7 @@ def search():
         savedFileLocations[fileLocationIndex] = "saved/" + savedFileLocations[fileLocationIndex]
     # Append own document
     savedFileLocations.append("tmpUploads/" + mFilename)
-    
+
     # Create TfIdf matrix
     mTfIdf = createTfIdfFromFiles(savedFileLocations)
 
@@ -346,12 +355,10 @@ def search():
 
     # Remove tmp file
     os.remove("tmpUploads/" + mFilename)
-    
-    return json.dumps(mRanked)
 
+    return json.dumps(mRanked)
 
 
 # Start server
 if __name__ == "__main__":
-	from waitress import serve
-	serve(app, host='0.0.0.0', port='8000')
+    serve(app, host='0.0.0.0', port='8000')
