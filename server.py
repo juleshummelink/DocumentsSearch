@@ -279,6 +279,7 @@ def addPreviews(freqTable, rankedTable):
             # Check if the document have common terms
             if row[queryIndex] > 0 and row[fileIndex] > wordCount:
                 word = row[0]
+                wordCount = row[queryIndex]
         # Find the text around word
         preview = textAroundWord(open('saved/' + file[1]).read(), word)
         outputRow = file
