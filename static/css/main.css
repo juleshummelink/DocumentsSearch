@@ -126,6 +126,12 @@ span{
     outline: none;
 }
 
+.pasteIncorrect{
+    width: calc(100% - 24px); 
+    height: calc(100% - 18px);
+    border: solid red 3px;
+}
+
 .buttons{
     width: calc(80% + 40px);
     max-width: 840px;

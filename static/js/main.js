@@ -16,8 +16,8 @@ pasteArea.addEventListener("focus", function(){
 searchButton.addEventListener("click", function(){
     // Check if not empty
     if(pasteArea.value.length <= 50){
-        // TODO: show error
-        console.log("TODO: show error");
+        // Make border red
+        pasteArea.classList.add("pasteIncorrect");
         return;
     }
     // Create file from text
@@ -86,6 +86,8 @@ function handleDrop(e) {
 }
 
 function search(file){
+    // Clear error border if shown
+    pasteArea.classList.remove("pasteIncorrect");
     // Clear previous output if available
     [...resultsContainer.children].forEach(child => {
         if(child.classList.contains("result")){
