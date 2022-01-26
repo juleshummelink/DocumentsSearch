@@ -121,7 +121,7 @@ def createQueryTable(TfIdf, VectorLengthTable, queryId):
 
 
 # This function returns the final output table with the ranked results
-def createRankedTable(queryTable, previewDict):
+def createRankedTable(queryTable):
     rankedTable = []
     # Append row with headers
     rankedTable.append(["position", "document", "similarity", "scale", "preview"])
@@ -138,12 +138,12 @@ def createRankedTable(queryTable, previewDict):
             scale = "low"
         if rankedQueryTable[rank][1] > 0.8:
             scale = "high"
-        rankedTable.append([rank+1, rankedQueryTable[rank][0], rankedQueryTable[rank][1], scale, previewDict[rankedQueryTable[rank][0]]])
+        rankedTable.append([rank+1, rankedQueryTable[rank][0], rankedQueryTable[rank][1], scale])
 
-    return rankedTable
+    return rankedTable    
 
 
-# This function returns the TfIdf table based on the locations of the files
+# This function returns the TfIdf (and frequency) table based on the locations of the files
 def createTfIdfFromFiles(locations):
     if verbose:
         print("\nCreating tfidf matrix of the following files:", locations)
@@ -226,11 +226,13 @@ def createTfIdfFromFiles(locations):
 
     if verbose:
         print("\nOutput table:\n", tabulate(output, headers="firstrow"))
-    return output
+    return [output, frequency]
 
 
 # This function finds the text around a word
 def textAroundWord(text, word, rangeAround=7):
+    if(word == ''):
+        return "No preview available..."
     output = "... "
     # Replace newlines
     text = text.replace("\n", " ")
@@ -242,6 +244,7 @@ def textAroundWord(text, word, rangeAround=7):
     processedArray = [lemmatizer.lemmatize(re.sub(r"[“”!\"#$%&()*+-./:;<=>?@[\]^_`{|}~\n'0-9]", r"", word).lower()) for word in textArray]
     # Find the first index of the keyword
     wordIndex = processedArray.index(word)
+    print(f"word: {word} index: {wordIndex}")
     # Loop through the range around the word
     for x in range(-rangeAround, rangeAround):
         if not x+wordIndex < 0 and not x+wordIndex >= len(textArray):
@@ -253,51 +256,36 @@ def textAroundWord(text, word, rangeAround=7):
     return output
 
 
-def createPreviewDict(fileLocations):
-    previews = dict()
-    # Open query file
-    queryFile = open(fileLocations[-1])
-    # Read query file
-    queryText = queryFile.read()
-    queryText = queryText.lower()
-    # Remove chars
-    # PROBLEM WITH ‘’
-    queryText = re.sub(r"[“”!\"#$%&()*+-./:;<=>?@[\]^_`{|}~\n'0-9]", r" ", queryText)
-    queryWords = queryText.split(" ")
-    # Remove empty words
-    queryWords.remove("")
-    # Remove stopwords
-    for stopWord in stopwords.words("english"):
-        try:
-            queryWords.remove(stopWord)
-        except:
-            pass
-    for location in fileLocations[:-1]:
-        # Open the file
-        mFile = open(location)
-        # Read the text from the file
-        mText = mFile.read()
-        # Convert to lower case
-        mTextEdit = mText.lower()
-        # Remove chars
-        # PROBLEM WITH ‘’
-        mTextEdit = re.sub(r"[“”!\"#$%&()*+-./:;<=>?@[\]^_`{|}~\n'0-9]", r" ", mTextEdit)
-        mWords = set(mTextEdit.split(" "))
-        # Remove empty words
-        mWords.remove("")
-        # Remove stopwords
-        for stopWord in stopwords.words("english"):
-            try:
-                mWords.remove(stopWord)
-            except:
-                pass
-        try:
-            mPreviewWord = list(mWords.intersection(queryWords))[0]
-            previews[os.path.basename(mFile.name)] = textAroundWord(mText, mPreviewWord)
-            # previews[os.path.basename(mFile.name)] = ["..." + re.search(r"((\w+|\s+|[.?!]){0,8}" + re.escape(mPreviewWord) + r"(\s+|\w+|[.?!]){0,8})", re.sub(r"\n", r" ", mText), re.IGNORECASE).group() + " ...", mPreviewWord]
-        except:
-            previews[os.path.basename(mFile.name)] = f"No preview available :("
-    return previews
+# This function adds a preview for every row in the output
+def addPreviews(freqTable, rankedTable):
+    # Create output table
+    output = []
+    header = rankedTable[0]
+    header.append("preview")
+    output.append(header)
+    # Loop through every document in ranked table
+    for file in rankedTable[1:]:
+        preview = "No preview available :("
+        fileIndex = 0
+        queryIndex = len(freqTable[0]) - 1
+        # Loop through name row of frequency table to find correct column
+        for documentId in range(1, len(freqTable[0])):
+            if file[1] == freqTable[0][documentId]:
+                fileIndex = documentId
+        # Loop through the frequency table to find the most common word
+        wordCount = 0
+        word = ""
+        for row in freqTable[1:]:
+            # Check if the document have common terms
+            if row[queryIndex] > 0 and row[fileIndex] > wordCount:
+                word = row[0]
+        # Find the text around word
+        preview = textAroundWord(open('saved/' + file[1]).read(), word)
+        outputRow = file
+        outputRow.append(preview)
+        output.append(outputRow)
+
+    return output
 
 
 # Create flask app
@@ -335,8 +323,10 @@ def search():
     # Append own document
     savedFileLocations.append("tmpUploads/" + mFilename)
 
-    # Create TfIdf matrix
-    mTfIdf = createTfIdfFromFiles(savedFileLocations)
+    # Create TfIdf matrix and frequency table
+    mOutput = createTfIdfFromFiles(savedFileLocations)
+    mTfIdf = mOutput[0]
+    mFrequency = mOutput[1]
 
     # Create vector length table
     mVectorLengths = createVectorTable(mTfIdf)
@@ -347,11 +337,14 @@ def search():
     printLog("Query length table:", mQueryTable, table=True)
 
     # Create previews
-    mPreviews = createPreviewDict(savedFileLocations)
+    # Not optimised because every file is checked even with no common words
+    # mPreviews = createPreviewDict(savedFileLocations)
 
     # Create output
-    mRanked = createRankedTable(mQueryTable, mPreviews)
+    mRanked = createRankedTable(mQueryTable)
+    mRanked = addPreviews(mFrequency, mRanked)
     printLog("Output:", mRanked, table=True)
+
 
     # Remove tmp file
     os.remove("tmpUploads/" + mFilename)
