@@ -296,7 +296,7 @@ app = flask.Flask(__name__)
 # Landing page
 @app.route("/")
 def main():
-    return render_template('main.html', ip=request.access_route)
+    return render_template('main.html', ip=request.access_route[-1])
 
 
 # Search API
