@@ -244,7 +244,6 @@ def textAroundWord(text, word, rangeAround=7):
     processedArray = [lemmatizer.lemmatize(re.sub(r"[“”!\"#$%&()*+-./:;<=>?@[\]^_`{|}~\n'0-9]", r"", word).lower()) for word in textArray]
     # Find the first index of the keyword
     wordIndex = processedArray.index(word)
-    print(f"word: {word} index: {wordIndex}")
     # Loop through the range around the word
     for x in range(-rangeAround, rangeAround):
         if not x+wordIndex < 0 and not x+wordIndex >= len(textArray):
