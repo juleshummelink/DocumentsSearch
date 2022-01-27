@@ -3,7 +3,8 @@ const upload = document.getElementsByClassName("upload")[0];
 const resultsContainer = document.getElementsByClassName("resultsContainer")[0];
 const loadingIcon = document.getElementsByClassName("loading")[0];
 const searchButton = document.getElementsByClassName("searchButton")[0];
-
+const popUpContainer = document.getElementsByClassName("popUpContainer")[0];
+const saveBox = document.getElementsByClassName("saveBox")[0];
 
 // Empty text of paste aria when clicked
 pasteArea.addEventListener("focus", function(){
@@ -24,7 +25,33 @@ searchButton.addEventListener("click", function(){
     var file = new File([pasteArea.value], "upload.txt");
 
     search(file)
-})
+});
+
+// Save checkbox
+saveBox.addEventListener('change', function(){
+    if(saveBox.checked){
+        popUpContainer.style.display = "flex";
+        setTimeout(function(){
+            popUpContainer.style.opacity = 1;
+        }, 10)
+    }
+});
+
+// Pop up
+function popUpAccept(){
+    popUpContainer.style.opacity = 0;
+    setTimeout(function(){
+        popUpContainer.style.display = "none";
+    }, 500);
+}
+
+function popUpReject(){
+    saveBox.checked = false;
+    popUpContainer.style.opacity = 0;
+    setTimeout(function(){
+        popUpContainer.style.display = "none";
+    }, 500);
+}
 
 // *****FILE UPLOAD
 

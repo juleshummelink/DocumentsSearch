@@ -7,6 +7,7 @@
     <title>PaperFind</title>
     <link rel="stylesheet" href="static/css/main.css">
     <link rel="stylesheet" href="static/css/results.css">
+    <link rel="stylesheet" href="static/css/popup.css">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons"
       rel="stylesheet">
 </head>
@@ -35,7 +36,7 @@
         </div>
         <div class="buttons">
             <div class="saveContainer">
-                <input type="checkbox" class="saveBox" checked="true" id="savePaper">
+                <input type="checkbox" class="saveBox" id="savePaper">
                 <label for="savePaper" class="saveLabel">Reccomend this paper to others</label>
             </div>
             <span class="searchButton">Search</span>
@@ -55,6 +56,42 @@
                 ... bowed their heads And grateful prayers were <b>prayed</b>. And the people in the streets ...
             </span>
         </div> -->
+    </div>
+
+    <div class="popUpContainer">
+        <div class="uploadPopUp">
+            <div class="popUpHorizontal">
+                <span class="material-icons popUpIcon titleIcon">
+                    done
+                </span>
+                <span class="popUpTitle">Please make sure:</span>
+            </div>
+            <div class="popUpHorizontal" style="margin-top: 40px;"">
+                <span class="material-icons popUpIcon">
+                    picture_as_pdf
+                </span>
+                <div class="popUpVertical">
+                    <span class="popUpSubTitle">It is the full document</span>
+                    <span class="popUpDescription">
+                        Please make sure that your document is uploaded in full length and preferably in PDF format.
+                    </span>
+                </div>
+            </div>
+            <div class="popUpHorizontal" style="margin-top: 40px;"">
+                <span class="material-icons popUpIcon">
+                    school
+                </span>
+                <div class="popUpVertical">
+                    <span class="popUpSubTitle">It is comming from a trusted source</span>
+                    <span class="popUpDescription">
+                        We want to make sure that the documents we index are of good quality and only rely on facts.
+                    </span>
+                </div>
+            </div>
+            <div class="ipNotice"><span style="text-align: center;">We securely store your ip <b>{{ip}}</b> to prevent fraud.</span></div>
+            <span class="popUpButton defaultButton" onclick="popUpAccept()">All good!</span>
+            <span class="popUpButton" onclick="popUpReject()">Just search</span>
+        </div>
     </div>
 </body>
 

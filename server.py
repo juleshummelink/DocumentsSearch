@@ -134,7 +134,7 @@ def createRankedTable(queryTable):
     for rank in range(0, len(rankedQueryTable)):
         # Find the scale (LOW, MEDIUM, HIGH)
         scale = "medium"
-        if rankedQueryTable[rank][1] < 0.2:
+        if rankedQueryTable[rank][1] < 0.1:
             scale = "low"
         if rankedQueryTable[rank][1] > 0.8:
             scale = "high"
@@ -296,7 +296,7 @@ app = flask.Flask(__name__)
 # Landing page
 @app.route("/")
 def main():
-    return render_template('main.html')
+    return render_template('main.html', ip=request.remote_addr)
 
 
 # Search API

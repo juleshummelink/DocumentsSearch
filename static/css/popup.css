@@ -1,0 +1,82 @@
+.popUpContainer{
+    position: fixed;
+    background-color: rgba(0, 0, 0, 0.7);
+    width: 100%;
+    height: 100%;
+    top: 0px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    display: none;
+    opacity: 0;
+    transition: opacity 0.5s;
+}
+
+.uploadPopUp{
+    background-color: white;
+    width: 80%;
+    max-width: 400px;
+    border-radius: 20px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+}
+
+.popUpHorizontal{
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+}
+
+.popUpVertical{
+    display: flex;
+    flex-direction: column;
+    margin-left: 20px;
+    margin-right: 20px;
+}
+
+.popUpIcon{
+    font-size: 40px !important;
+}
+
+.popUpTitle{
+    margin-left: 20px;
+    font-size: 30px;
+    font-weight: 900;
+}
+
+.popUpSubTitle{
+    font-size: 18px;
+    font-weight: bold;
+}
+
+.ipNotice{
+    margin-top: 20px;
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    gap: 5px;
+    width: 100%;
+}
+
+.popUpButton{
+    background-color: #cacaca;
+    color: #363636;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    padding: 8px;
+    font-size: 18px;
+    font-weight: bold;
+    margin-top: 10px;
+    border-radius: 10px;
+    cursor: pointer;
+}
+
+.defaultButton{
+    color: white;
+    background-color: #0d9700;
+    margin-top: 20px;
+}
