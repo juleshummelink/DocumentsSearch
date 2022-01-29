@@ -27,6 +27,7 @@ port = '8000'
 verbose = False
 hideLow = False
 memoryProfiling = False
+amountOfThreads = 8
 limit = 0
 for arg in sys.argv:
     if arg == "-v":
@@ -41,13 +42,20 @@ for arg in sys.argv:
         except:
             print("Argument error: Please add [amount] after -l")
             exit()
+    if arg == "-t":
+        try:
+            amountOfThreads = int(sys.argv[sys.argv.index("-t") + 1])
+        except:
+            print("Argument error: Please add [amount] after -t")
+            exit()
 
     if arg == "-h" or arg == "--help":
         print("==PaperFind Server==")
         print(" -h              Show this menu")
         print(" -v              Print all steps of calculation in terminal")
         print(" -u              Do not output ULTRA LOW results")
-        print(" -l  [amount]    Limit the output to a certain amount")
+        print(" -l  [amount]    Limit the output to a certain amount. Default: 0")
+        print(" -t  [amount]    Specify on how many threads the server should be active. Default: 8")
         print(" -mp             Profile memory use per query")
         exit()
 
@@ -483,5 +491,5 @@ index()
 # Start server
 if __name__ == "__main__":
     printLog(f"\nStarting sever on port {port}")
-    serve(app, host='0.0.0.0', port=port, threads=8)
+    serve(app, host='0.0.0.0', port=port, threads=amountOfThreads)
 

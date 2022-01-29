@@ -60,7 +60,7 @@ upload.addEventListener("click", onClickImage);
 function onClickImage(){
     let input = document.createElement('input');
     input.type = 'file';
-    input.accept = '.txt';
+    input.accept = '.txt,.pdf';
     
     input.onchange = _ => {
         imageFile = Array.from(input.files)[0];
