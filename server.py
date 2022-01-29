@@ -1,7 +1,8 @@
-import csv
 from math import log2
+from operator import index
 import os
 import sys
+from unicodedata import name
 from markupsafe import re
 from tabulate import tabulate
 import re
@@ -14,8 +15,50 @@ from flask import render_template
 import json
 from random import randint
 from waitress import serve
+import time
+from pdfminer.high_level import extract_text
+from guppy import hpy
 
 ALLOWED_EXTENSIONS = {'txt', 'pdf'}
+
+port = '8000'
+
+# Read arguments from shell
+verbose = False
+hideLow = False
+memoryProfiling = False
+limit = 0
+for arg in sys.argv:
+    if arg == "-v":
+        verbose = True
+    if arg == "-u":
+        hideLow = True
+    if arg == "-mp":
+        memoryProfiling = True
+    if arg == "-l":
+        try:
+            limit = int(sys.argv[sys.argv.index("-l") + 1])
+        except:
+            print("Argument error: Please add [amount] after -l")
+            exit()
+
+    if arg == "-h" or arg == "--help":
+        print("==PaperFind Server==")
+        print(" -h              Show this menu")
+        print(" -v              Print all steps of calculation in terminal")
+        print(" -u              Do not output ULTRA LOW results")
+        print(" -l  [amount]    Limit the output to a certain amount")
+        print(" -mp             Profile memory use per query")
+        exit()
+
+
+# Start memory profyling
+if memoryProfiling:
+    h = hpy()
+
+# Global runtime variables
+frequencyTable = None
+preIdf = None
 
 # Making sure all required nltk packages are installed
 print("Making sure all required nltk packages are installed")
@@ -25,19 +68,9 @@ nltk.download("wordnet")
 
 lemmatizer = WordNetLemmatizer()
 
-# Read arguments from shell
-verbose = False
-try:
-    if sys.argv[1] == "-v":
-        verbose = True
-except:
-    pass
-
-
 # Simple logging function
 def printLog(*input, table=False):
-    if verbose and not table:
-        print("\n", end="")
+    if not table:
         for item in input:
             print(item, end=" ")
         print("\n", end="")
@@ -46,28 +79,14 @@ def printLog(*input, table=False):
         print(tabulate(input[1], headers="firstrow"))
         print("\n", end="")
 
-
-def importTfIdf(fileLocation):
-    # Open the csv file
-    try:
-        file = open(fileLocation, 'r')
-        csvReader = csv.reader(file)
-        # Create a table to save data
-        table = []
-        for line in csvReader:
-            # Change all strings to floats
-            row = []
-            for item in line:
-                try:
-                    row.append(float(item))
-                except:
-                    # Item is not a float, leave as it
-                    row.append(item)
-            # For every line (term) extract the data per document
-            table.append(row)
-        return table
-    except:
-        print("Could not open TfIdf table file...")
+# Function that reads text with support for multiple file extenstions
+def readText(file):
+    if file.name.split('.')[-1] == "txt":
+        # Read text from file
+        return file.read()
+    elif file.name.split('.')[-1] == "pdf":
+        # Read text from PDF
+        return extract_text(file.name, 'rb')
 
 
 # This function calculates the vector length per document id
@@ -108,18 +127,6 @@ def compareDocuments(TfIdf, vectorLengthTable, document1, document2):
     return dotProduct/lengthProduct
 
 
-# This function returns a query table
-def createQueryTable(TfIdf, VectorLengthTable, queryId):
-    table = []
-    table.append(TfIdf[0][1:])
-    results = []
-    for id in range(1, len(TfIdf[0])):
-        if not id == queryId:
-            results.append(compareDocuments(TfIdf, VectorLengthTable, queryId, id))
-    table.append(results)
-    return table
-
-
 # This function returns the final output table with the ranked results
 def createRankedTable(queryTable):
     rankedTable = []
@@ -131,102 +138,35 @@ def createRankedTable(queryTable):
         rotatedTable.append([queryTable[0][documentId], queryTable[1][documentId]])
     # Sort the table
     rankedQueryTable = sorted(rotatedTable, key=lambda score: score[1].real, reverse=True)
-    for rank in range(0, len(rankedQueryTable)):
+    maxResult = limit
+    if limit == 0:
+        maxResult = len(rankedQueryTable)
+    for rank in range(0, maxResult):
         # Find the scale (LOW, MEDIUM, HIGH)
         scale = "medium"
-        if rankedQueryTable[rank][1] < 0.1:
+        if rankedQueryTable[rank][1] < 0.2:
             scale = "low"
         if rankedQueryTable[rank][1] > 0.8:
             scale = "high"
-        rankedTable.append([rank+1, rankedQueryTable[rank][0], rankedQueryTable[rank][1], scale])
-
+        # Append row to table
+        if not hideLow:
+            rankedTable.append([rank+1, rankedQueryTable[rank][0], rankedQueryTable[rank][1], scale])
+        else:
+            if rankedQueryTable[rank][1] > 0.01:
+                rankedTable.append([rank+1, rankedQueryTable[rank][0], rankedQueryTable[rank][1], scale])
     return rankedTable    
 
 
-# This function returns the TfIdf (and frequency) table based on the locations of the files
-def createTfIdfFromFiles(locations):
-    if verbose:
-        print("\nCreating tfidf matrix of the following files:", locations)
-    # Create the output, idf and frequency table
-    output = []
-    idf = [["term", "df", "N/df", "idf"]]
-    frequency = []
-    df = dict()
-    # Create a header row
-    nameRow = ["term"]
-    # A list to store a word dict per file
-    fileDicts = []
-    # Loop through all the files
-    for fileLocation in locations:
-        # Open the file
-        mFile = open(fileLocation)
-        # Add the filename to the name row
-        nameRow.append(os.path.basename(mFile.name))
-        # Read the text from the file
-        mText = mFile.read()
-        # Convert to lower case
-        mText = mText.lower()
-        # Remove chars
-        mText = re.sub(r"[“”‘’—!\"#$%&()*+-./:;<=>?@[\]^_`{|}~\n'0-9]", r"", mText)
-        # Loop through the words
-        mWords = dict()
-        for word in mText.split(" "):
-            # Lemitate the word
-            mWord = lemmatizer.lemmatize(word)
-            # Check if it is a stop word
-            if mWord not in stopwords.words("english") and not word == "":
-                # Check if the world already excists in dictionary
-                if mWord not in mWords:
-                    mWords[mWord] = 1
-                else:
-                    mWords[mWord] += 1
-        # Append wordcount dict to the list of file dicts
-        fileDicts.append(mWords)
-        # Close the file
-        mFile.close()
-    # Add the name row to the output and frequency table
-    frequency.append(nameRow)
-    output.append(nameRow)
-    # Merge the wordcounts per document togather in one dict
-    mergedDict = dict()
-    for fileDict in fileDicts:
-        mergedDict.update(fileDict)
-    # Loop through all the terms to create the frequency matrix
-    for term in mergedDict.keys():
-        # Add the term itself to the term column
-        termRow = [term]
-        # Loop through the documents
-        for documentId in range(0, len(fileDicts)):
-            try:
-                termRow.append(fileDicts[documentId][term])
-                # Add to the df dict
-                if term in df:
-                    df[term] += 1
-                else:
-                    df[term] = 1
-            except:
-                termRow.append(0)
-        # Add the term row to the frequency table
-        frequency.append(termRow)
-    if verbose:
-        print("\nFrequency table:\n", tabulate(frequency, headers="firstrow"))
-    N = len(fileDicts)
-    # Loop through all terms again to create the idf table
-    for term in mergedDict.keys():
-        idf.append([term, df[term], N/df[term], log2(N/df[term])])
-
-    if verbose:
-        print("\nIdf table:\n", tabulate(idf, headers="firstrow"))
-    # Create output table by multiplying frequency table by idf
-    for row in frequency[1:]:
-        outputRow = [row[0]]
-        for freq in row[1:]:
-            outputRow.append(freq*idf[frequency.index(row)][3])
-        output.append(outputRow)
-
-    if verbose:
-        print("\nOutput table:\n", tabulate(output, headers="firstrow"))
-    return [output, frequency]
+# This function returns a query table
+def createQueryTable(TfIdf, VectorLengthTable, queryId):
+    table = []
+    table.append(TfIdf[0][1:])
+    results = []
+    for id in range(1, len(TfIdf[0])):
+        if not id == queryId:
+            results.append(compareDocuments(TfIdf, VectorLengthTable, queryId, id))
+    table.append(results)
+    return table
 
 
 # This function finds the text around a word
@@ -280,7 +220,7 @@ def addPreviews(freqTable, rankedTable):
                 word = row[0]
                 wordCount = row[queryIndex]
         # Find the text around word
-        preview = textAroundWord(open('saved/' + file[1]).read(), word)
+        preview = textAroundWord(readText(open('saved/' + file[1])), word)
         outputRow = file
         outputRow.append(preview)
         output.append(outputRow)
@@ -288,9 +228,179 @@ def addPreviews(freqTable, rankedTable):
     return output
 
 
+class FrequencyTable():
+    mFrequencyTable = []
+    mFileDicts = []
+
+    def __init__(self, fileLocations=[], table=None, dicts=None):
+        # Check if table is provided
+        if not table == None and not dicts == None:
+            self.mFrequencyTable = table
+            self.mFileDicts = dicts
+            return
+        # Create a name row that contains all the names
+        nameRow = ["term"]
+        # Create a list that stores all file dicts
+        # Loop through all the files
+        for fileLocation in fileLocations:
+            # Open the file
+            try:
+                # Open the file
+                file = open(fileLocation)
+                printLog(f"Indexing {file.name}")
+                text = readText(file)
+                # Add the filename to the name row
+                nameRow.append(os.path.basename(file.name))
+                # Convert to lowercase
+                text = text.lower()
+                # Remove newline
+                text = text.replace("\n", " ")
+                # Remove chars
+                text = re.sub(r"[“”‘’—!\"#$%&()*+-./:;<=>?@[\]^_`{|}~'0-9]", r"", text)
+                # Create a dictinary to store words
+                fileWords = dict()
+                # Loop through all the worlds
+                for word in text.split(" "):
+                    # Lemitate the word
+                    eWord = lemmatizer.lemmatize(word)
+                    # Check if word is stopword or empty
+                    if eWord not in stopwords.words("english") and not word == "":
+                        # Check if the word already exists in the dict
+                        if eWord not in fileWords:
+                            fileWords[eWord] = 1
+                        else:
+                            fileWords[eWord] += 1
+                # Append dict to file dicts
+                self.mFileDicts.append(fileWords)
+                # Close the file
+                file.close()
+            except Exception as e:
+                # File could not be opened
+                printLog(f"{fileLocation} could not be opened!\n{e}")
+        # Add name row to frequency table
+        self.mFrequencyTable.append(nameRow)
+        # Merge wordcounts into one dict
+        allWords = dict()
+        for fileWords in self.mFileDicts:
+            allWords.update(fileWords)
+        # Loop through all the merged words to create frequency table
+        for term in allWords.keys():
+            # Create a row and add the term to it in column 0
+            termRow = [term]
+            # Add the freq to every document
+            for documentId in range(0,len(self.mFileDicts)):
+                try:
+                    termRow.append(self.mFileDicts[documentId][term])
+                except:
+                    termRow.append(0)
+            # Add the term row to the table
+            self.mFrequencyTable.append(termRow)
+        printLog("New frequency table created:", self.mFrequencyTable, table=True)
+
+    # This function returns a new frequency table object, now including one extra file (no recalculation of other files)
+    def createNewTableWith(self, fileLocation):
+        # Open the file
+        file = open(fileLocation)
+        text = readText(file)
+        # Create the output table
+        outputTable = []
+        # Add the name to the name row
+        outputTable.append(list(self.mFrequencyTable[0]))
+        outputTable[0].append(os.path.basename(file.name))
+        # Convert to lowercase
+        text = text.lower()
+        # Remove newline
+        text = text.replace("\n", " ")
+        # Remove chars
+        text = re.sub(r"[“”‘’—!\"#$%&()*+-./:;<=>?@[\]^_`{|}~'0-9]", r"", text)
+        # Loop through all the words of the query file
+        fileWords = dict()
+        for word in text.split(" "):
+            # Lemitate the word
+            eWord = lemmatizer.lemmatize(word)
+            # Check if it is a stop word and not empty
+            if eWord not in stopwords.words("english") and not word == "":
+                if eWord not in fileWords:
+                    fileWords[eWord] = 1
+                else:
+                    fileWords[eWord] += 1
+        # Add query file dict to the other file dicts
+        allDicts = self.mFileDicts.copy()
+        allDicts.append(fileWords)
+        # Create new all files dict
+        allWords = dict()
+        for fileWords in allDicts:
+            allWords.update(fileWords)
+        # Loop through all the merged words to create frequency table
+        for term in allWords.keys():
+            # Create a row and add the term to it in column 0
+            termRow = [term]
+            # Add the freq to every document
+            for documentId in range(0,len(allDicts)):
+                try:
+                    termRow.append(allDicts[documentId][term])
+                except:
+                    termRow.append(0)
+            # Add the term row to the table
+            outputTable.append(termRow)
+        printLog("Frequency table created with file", outputTable, table=True)
+        return FrequencyTable(table=outputTable, dicts=allDicts)
+
+    # This function returns a dict holding a pre idf value, the idf value if there was another document, per term
+    def createPreIdfDict(self):
+        output = dict()
+        # Get the number of documents + 1
+        N = len(self.mFileDicts) + 1
+        # Loop through all the rows
+        for termRow in self.mFrequencyTable[1:]:
+            df = 0
+            for frequency in termRow[1:]:
+                if frequency > 0:
+                    df += 1
+            output[termRow[0]] = log2(N/df)
+        return output
+
+    # This function can be called on a frequency matrix that has a query document added to it
+    # together with the preIdfTable created with a table that has NO query document in it
+    # the last document in the table will be used as query document. It will return a TfIdf table
+    def getTfIdf(self, preIdf):
+        output = []
+        # Get number of documents + 1
+        N = len(self.mFrequencyTable)
+        # Add name row to output table
+        output.append(self.mFrequencyTable[0])
+        # Loop through the terms
+        for termRow in self.mFrequencyTable[1:]:
+            outputRow = [termRow[0]]
+            # Check if the tfidf needs to be recalculated
+            if termRow[-1] > 0:
+                # Recalculate value
+                df = 0;
+                for freq in termRow[1:]:
+                    if freq > 0:
+                        df += 1
+                idf = log2(N/df)
+                for freq in termRow[1:]:
+                    outputRow.append(freq * idf)
+            else:
+                # Recalculation not needed, use preIdf value
+                for freq in termRow[1:]:
+                    outputRow.append(freq * preIdf[termRow[0]])
+            output.append(outputRow)
+        printLog("TfIdf table created:", output, table=True)
+        return output
+
+    def getFileLen(self):
+        return len(self.mFileDicts)
+
+    def getList(self):
+        return self.mFrequencyTable
+
+
+# Main functions
+
 # Create flask app
 app = flask.Flask(__name__)
-
 
 # Landing page
 @app.route("/")
@@ -307,6 +417,8 @@ def allowed_file(filename):
 @app.route("/search", methods=["POST"])
 def search():
     printLog("Request started!")
+    # Save time for time comaprison
+    startTime = time.time()
     # Retreive file
     mFile = request.files['file']
     if not allowed_file(mFile.filename):
@@ -316,42 +428,60 @@ def search():
     printLog("File uploaded, save in temp folder as", mFilename)
     mFile.save("tmpUploads/" + mFilename)
 
-    # Get all documents in saved folder
-    savedFileLocations = os.listdir('saved')
-    for fileLocationIndex in range(len(savedFileLocations)):
-        savedFileLocations[fileLocationIndex] = "saved/" + savedFileLocations[fileLocationIndex]
-    # Append own document
-    savedFileLocations.append("tmpUploads/" + mFilename)
-
-    # Create TfIdf matrix and frequency table
-    mOutput = createTfIdfFromFiles(savedFileLocations)
-    mTfIdf = mOutput[0]
-    mFrequency = mOutput[1]
+    # Create frequency table with query file
+    printLog("Creating frequency table with file...")
+    queryFreqTable = frequencyTable.createNewTableWith("tmpUploads/" + mFilename)
+    printLog("Creating tfIdf table with file...")
+    tfIdf = queryFreqTable.getTfIdf(preIdf)
 
     # Create vector length table
-    mVectorLengths = createVectorTable(mTfIdf)
-    printLog("Vector length table:", mVectorLengths, table=True)
+    printLog("Calculating vector lengths...")
+    vectorLengths = createVectorTable(tfIdf)
+    printLog("Vector length table:", vectorLengths, table=True)
 
     # Create query table
-    mQueryTable = createQueryTable(mTfIdf, mVectorLengths, len(savedFileLocations))
-    printLog("Query length table:", mQueryTable, table=True)
+    printLog("Generating query table")
+    queryTable = createQueryTable(tfIdf, vectorLengths, queryFreqTable.getFileLen())
+    printLog("Query length table:", queryTable, table=True)
 
-    # Create previews
-    # Not optimised because every file is checked even with no common words
-    # mPreviews = createPreviewDict(savedFileLocations)
-
-    # Create output
-    mRanked = createRankedTable(mQueryTable)
-    mRanked = addPreviews(mFrequency, mRanked)
+    # Generating output
+    printLog("Generating previews and output...")
+    mRanked = createRankedTable(queryTable)
+    mRanked = addPreviews(queryFreqTable.getList(), mRanked)
     printLog("Output:", mRanked, table=True)
-
 
     # Remove tmp file
     os.remove("tmpUploads/" + mFilename)
 
+    printLog(f"Query completed in: {time.time() - startTime} sec")
+
+    # Print memory usage if profiling is enabled
+    if memoryProfiling:
+        print(h.heap())
+
     return json.dumps(mRanked)
 
 
+# This function indexes the documents saved in the folder
+def index():
+    global frequencyTable
+    global preIdf
+    printLog("\nIndexing started!")
+    # Get all documents in saved folder
+    savedFileLocations = os.listdir('saved')
+    for fileLocationIndex in range(len(savedFileLocations)):
+        savedFileLocations[fileLocationIndex] = "saved/" + savedFileLocations[fileLocationIndex]
+    # Create frequency table
+    frequencyTable = FrequencyTable(savedFileLocations)
+    # Create PreIdfDict
+    preIdf = frequencyTable.createPreIdfDict()
+    printLog("Indexing complete!")
+
+# Make sure that indexing happens at start
+index()
+
 # Start server
 if __name__ == "__main__":
-    serve(app, host='0.0.0.0', port='8000')
+    printLog(f"\nStarting sever on port {port}")
+    serve(app, host='0.0.0.0', port=port, threads=8)
+

@@ -2,3 +2,5 @@ tabulate
 nltk
 flask
 waitress
+guppy3
+pdfminer.six
