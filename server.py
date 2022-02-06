@@ -48,10 +48,17 @@ for arg in sys.argv:
         except:
             print("Argument error: Please add [amount] after -t")
             exit()
+    if arg == "-p":
+        try:
+            port = int(sys.argv[sys.argv.index("-p") + 1])
+        except:
+            print("Argument error: Please add [PORT] after -p")
+            exit()
 
     if arg == "-h" or arg == "--help":
         print("==PaperFind Server==")
         print(" -h              Show this menu")
+        print(" -p  [PORT]      Change server port. Default: 8000")
         print(" -v              Print all steps of calculation in terminal")
         print(" -u              Do not output ULTRA LOW results")
         print(" -l  [amount]    Limit the output to a certain amount. Default: 0")
@@ -228,7 +235,7 @@ def addPreviews(freqTable, rankedTable):
                 word = row[0]
                 wordCount = row[queryIndex]
         # Find the text around word
-        preview = textAroundWord(readText(open('saved/' + file[1])), word)
+        preview = textAroundWord(readText(open(os.path.abspath('saved/' + file[1]))), word)
         outputRow = file
         outputRow.append(preview)
         output.append(outputRow)
