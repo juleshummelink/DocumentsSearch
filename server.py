@@ -18,6 +18,7 @@ from waitress import serve
 import time
 from pdfminer.high_level import extract_text
 from guppy import hpy
+import shutil
 
 ALLOWED_EXTENSIONS = {'txt', 'pdf'}
 
@@ -390,7 +391,7 @@ class FrequencyTable():
             # Check if the tfidf needs to be recalculated
             if termRow[-1] > 0:
                 # Recalculate value
-                df = 0;
+                df = 0
                 for freq in termRow[1:]:
                     if freq > 0:
                         df += 1
@@ -431,6 +432,8 @@ def allowed_file(filename):
 
 @app.route("/search", methods=["POST"])
 def search():
+    global frequencyTable
+    global preIdf
     printLog("Request started!")
     # Save time for time comaprison
     startTime = time.time()
@@ -464,6 +467,15 @@ def search():
     mRanked = createRankedTable(queryTable)
     mRanked = addPreviews(queryFreqTable.getList(), mRanked)
     printLog("Output:", mRanked, table=True)
+
+    if request.form.get('saveFile') == "true":
+        try:
+            print("Adding file to dataset...")
+            shutil.copyfile("tmpUploads/" + mFilename, "saved/" + mFile.filename)
+            frequencyTable = frequencyTable.createNewTableWith("saved/" + mFile.filename)
+            preIdf = frequencyTable.createPreIdfDict()
+        except:
+            printLog("File already indexed...")
 
     # Remove tmp file
     os.remove("tmpUploads/" + mFilename)

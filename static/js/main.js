@@ -128,6 +128,7 @@ function search(file){
     request.open('POST', 'search', true);
     var formdata = new FormData();
     formdata.append("file", file);
+    formdata.append("saveFile", saveBox.checked);
 
     request.onreadystatechange = function(){
         if(this.readyState == 4){
